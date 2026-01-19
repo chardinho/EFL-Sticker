@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sticker Pack Game</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  header {
+    width: 100%;
+    background: #eee;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  header button {
+    font-size: 16px;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  #coins, #packs {
+    font-weight: bold;
+    font-size: 16px;
+  }
+  #sticker-area {
+    margin-top: 20px;
+    width: 800px;
+    height: 400px;
+    background: #fff;
+    border: 1px solid #ccc;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .sticker-card {
+    width: 160px;
+    height: 240px;
+    border: 2px solid #333;
+    background: #ddd;
+    margin: 0 5px;
+    position: absolute;
+    cursor: grab;
+    transform-style: preserve-3d;
+    transition: transform 0.5s;
+  }
+  .sticker-card.flipped {
+    transform: rotateY(180deg);
+  }
+  .sticker-front, .sticker-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 48px;
+    font-weight: bold;
+  }
+  .sticker-back {
+    transform: rotateY(180deg);
+    flex-direction: column;
+  }
+  .sticker-back img {
+    width: 140px;
+    height: 190px;
+    margin-bottom: 5px;
+    object-fit: cover;
+  }
+  #open-pack {
+    margin-top: 20px;
+    padding: 12px 24px;
+    font-size: 20px;
+    background: #32cd32;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+  }
+  #open-pack.disabled {
+    background: red;
+    cursor: not-allowed;
+  }
+  #album, #duplicates {
+    display: none;
+    position: fixed;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    height: 80%;
+    background: #fff;
+    border: 2px solid #333;
+    overflow: auto;
+    padding: 10px;
+    z-index: 100;
+  }
+  #album h2, #duplicates h2 {
+    text-align: center;
+  }
+  .album-grid, .duplicates-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .album-slot, .duplicate-slot {
+    width: 150px;
+    height: 220px;
+    border: 1px solid #888;
+    background: #eee;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    font-size: 48px;
+    color: #aaa;
+  }
+  .album-slot img, .duplicate-slot img {
+    width: 140px;
+    height: 190px;
+    object-fit: cover;
+    margin-bottom: 5px;
+  }
+  .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: bold;
+    padding: 4px 8px;
+    border: 1px solid #333;
+    background: #ddd;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <button id="album-btn">📖 ALBUM</button>
+  <button id="duplicates-btn">📂 DUPLICATES</button>
+  <div id="coins">💰 Coins: 100</div>
+  <div id="packs">📦 Packs Opened: 0</div>
+</header>
+
+<div id="sticker-area"></div>
+
+<button id="open-pack">🎁 OPEN PACK (5 Coins)</button>
+
+<div id="album">
+  <div class="close-btn" onclick="document.getElementById('album').style.display='none'">✖</div>
+  <h2>Sticker Album</h2>
+  <div class="album-grid" id="album-grid"></div>
+</div>
+
+<div id="duplicates">
+  <div class="close-btn" onclick="document.getElementById('duplicates').style.display='none'">✖</div>
+  <h2>Duplicates</h2>
+  <div class="duplicates-grid" id="duplicates-grid"></div>
+  <button id="sell-duplicates" style="margin-top:10px; padding:10px 20px; font-size:16px;">💰 Sell All Duplicates</button>
+</div>
+
+<script>
+  const STICKERS_TOTAL = 100; // adjust to your images folder
+  let coins = 100;
+  let packsOpened = 0;
+  const userCollection = [];
+  const duplicates = [];
+
+  const stickerArea = document.getElementById('sticker-area');
+  const coinsLabel = document.getElementById('coins');
+  const packsLabel = document.getElementById('packs');
+  const openPackBtn = document.getElementById('open-pack');
+
+  function updateLabels() {
+    coinsLabel.textContent = `💰 Coins: ${coins}`;
+    packsLabel.textContent = `📦 Packs Opened: ${packsOpened}`;
+    if (coins < 5) {
+      openPackBtn.classList.add('disabled');
+    } else {
+      openPackBtn.classList.remove('disabled');
+    }
+  }
+
+  function getRandomStickers(count) {
+    const available = Array.from({length: STICKERS_TOTAL}, (_, i) => i+1);
+    available.sort(() => 0.5 - Math.random());
+    return available.slice(0, count);
+  }
+
+  function openPack() {
+    if (coins < 5) return;
+    coins -= 5;
+    packsOpened++;
+    updateLabels();
+
+    const stickers = getRandomStickers(5);
+    stickerArea.innerHTML = '';
+    stickers.forEach((num, i) => {
+      const card = document.createElement('div');
+      card.className = 'sticker-card';
+      card.style.left = `${i*30 + 200}px`;
+      card.style.top = `50px`;
+
+      card.innerHTML = `
+        <div class="sticker-front">?</div>
+        <div class="sticker-back">
+          <img src="images/${num}.png" alt="Sticker ${num}">
+          <div>#${num}</div>
+        </div>
+      `;
+
+	  card.addEventListener('click', () => {
+	    if (!card.classList.contains('flipped')) {
+		  card.classList.add('flipped');
+	    }
+	  });
+
+
+      // drag
+      let offsetX, offsetY, dragging = false;
+      card.addEventListener('mousedown', e => {
+        dragging = true;
+        offsetX = e.offsetX;
+        offsetY = e.offsetY;
+        card.style.cursor = 'grabbing';
+      });
+      document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        card.style.left = (e.clientX - offsetX - stickerArea.offsetLeft) + 'px';
+        card.style.top = (e.clientY - offsetY - stickerArea.offsetTop) + 'px';
+      });
+      document.addEventListener('mouseup', e => dragging = false);
+
+      stickerArea.appendChild(card);
+
+      // collection/duplicates
+      if (userCollection.includes(num)) {
+        if (!duplicates.includes(num)) duplicates.push(num);
+      } else {
+        userCollection.push(num);
+      }
+    });
+  }
+
+  document.getElementById('album-btn').addEventListener('click', () => {
+    document.getElementById('album').style.display = 'block';
+    refreshAlbum();
+  });
+  document.getElementById('duplicates-btn').addEventListener('click', () => {
+    document.getElementById('duplicates').style.display = 'block';
+    refreshDuplicates();
+  });
+  document.getElementById('open-pack').addEventListener('click', openPack);
+  document.getElementById('sell-duplicates').addEventListener('click', () => {
+    coins += duplicates.length;
+    duplicates.length = 0;
+    updateLabels();
+    refreshDuplicates();
+  });
+
+  function refreshAlbum() {
+    const grid = document.getElementById('album-grid');
+    grid.innerHTML = '';
+    for (let i=1; i<=STICKERS_TOTAL; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'album-slot';
+      if (userCollection.includes(i)) {
+        slot.innerHTML = `<img src="images/${i}.png"><div>#${i}</div>`;
+      } else {
+        slot.textContent = '?';
+      }
+      grid.appendChild(slot);
+    }
+  }
+
+  function refreshDuplicates() {
+    const grid = document.getElementById('duplicates-grid');
+    grid.innerHTML = '';
+    duplicates.forEach(i => {
+      const slot = document.createElement('div');
+      slot.className = 'duplicate-slot';
+      slot.innerHTML = `<img src="images/${i}.png"><div>#${i}</div>`;
+      grid.appendChild(slot);
+    });
+  }
+
+  updateLabels();
+</script>
+
+</body>
+</html>
