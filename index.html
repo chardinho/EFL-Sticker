@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sticker Pack Game</title>
+
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -14,6 +15,7 @@
     flex-direction: column;
     align-items: center;
   }
+
   header {
     width: 100%;
     background: #eee;
@@ -24,15 +26,18 @@
     align-items: center;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   }
+
   header button {
     font-size: 16px;
     padding: 8px 12px;
     cursor: pointer;
   }
+
   #coins, #packs {
     font-weight: bold;
     font-size: 16px;
   }
+
   #sticker-area {
     margin-top: 20px;
     width: 800px;
@@ -44,6 +49,7 @@
     justify-content: center;
     align-items: center;
   }
+
   .sticker-card {
     width: 160px;
     height: 240px;
@@ -54,10 +60,13 @@
     cursor: grab;
     transform-style: preserve-3d;
     transition: transform 0.5s;
+    user-select: none;
   }
+
   .sticker-card.flipped {
     transform: rotateY(180deg);
   }
+
   .sticker-front, .sticker-back {
     position: absolute;
     width: 100%;
@@ -69,16 +78,19 @@
     font-size: 48px;
     font-weight: bold;
   }
+
   .sticker-back {
     transform: rotateY(180deg);
     flex-direction: column;
   }
+
   .sticker-back img {
     width: 140px;
     height: 190px;
     margin-bottom: 5px;
     object-fit: cover;
   }
+
   #open-pack {
     margin-top: 20px;
     padding: 12px 24px;
@@ -88,10 +100,12 @@
     border: none;
     cursor: pointer;
   }
+
   #open-pack.disabled {
     background: red;
     cursor: not-allowed;
   }
+
   #album, #duplicates {
     display: none;
     position: fixed;
@@ -106,15 +120,18 @@
     padding: 10px;
     z-index: 100;
   }
+
   #album h2, #duplicates h2 {
     text-align: center;
   }
+
   .album-grid, .duplicates-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 10px;
     margin-top: 20px;
   }
+
   .album-slot, .duplicate-slot {
     width: 150px;
     height: 220px;
@@ -127,12 +144,14 @@
     font-size: 48px;
     color: #aaa;
   }
+
   .album-slot img, .duplicate-slot img {
     width: 140px;
     height: 190px;
     object-fit: cover;
     margin-bottom: 5px;
   }
+
   .close-btn {
     position: absolute;
     top: 10px;
@@ -146,6 +165,7 @@
   }
 </style>
 </head>
+
 <body>
 
 <header>
@@ -173,7 +193,7 @@
 </div>
 
 <script>
-  const STICKERS_TOTAL = 100; // adjust to your images folder
+  const STICKERS_TOTAL = 700; 
   let coins = 100;
   let packsOpened = 0;
   const userCollection = [];
@@ -187,11 +207,7 @@
   function updateLabels() {
     coinsLabel.textContent = `💰 Coins: ${coins}`;
     packsLabel.textContent = `📦 Packs Opened: ${packsOpened}`;
-    if (coins < 5) {
-      openPackBtn.classList.add('disabled');
-    } else {
-      openPackBtn.classList.remove('disabled');
-    }
+    openPackBtn.classList.toggle('disabled', coins < 5);
   }
 
   function getRandomStickers(count) {
@@ -202,12 +218,14 @@
 
   function openPack() {
     if (coins < 5) return;
+
     coins -= 5;
     packsOpened++;
     updateLabels();
 
     const stickers = getRandomStickers(5);
     stickerArea.innerHTML = '';
+
     stickers.forEach((num, i) => {
       const card = document.createElement('div');
       card.className = 'sticker-card';
@@ -222,31 +240,45 @@
         </div>
       `;
 
-	  card.addEventListener('click', () => {
-	    if (!card.classList.contains('flipped')) {
-		  card.classList.add('flipped');
-	    }
-	  });
+      // One-way flip
+      card.addEventListener('click', () => {
+        if (!card.classList.contains('flipped')) {
+          card.classList.add('flipped');
+        }
+      });
 
+      // Smooth Drag System
+      let offsetX = 0;
+      let offsetY = 0;
+      let draggingCard = null;
 
-      // drag
-      let offsetX, offsetY, dragging = false;
-      card.addEventListener('mousedown', e => {
-        dragging = true;
-        offsetX = e.offsetX;
-        offsetY = e.offsetY;
+      card.addEventListener('mousedown', (e) => {
+        draggingCard = card;
+
+        const rect = card.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+
         card.style.cursor = 'grabbing';
       });
-      document.addEventListener('mousemove', e => {
-        if (!dragging) return;
-        card.style.left = (e.clientX - offsetX - stickerArea.offsetLeft) + 'px';
-        card.style.top = (e.clientY - offsetY - stickerArea.offsetTop) + 'px';
+
+      document.addEventListener('mousemove', (e) => {
+        if (!draggingCard) return;
+
+        const areaRect = stickerArea.getBoundingClientRect();
+
+        draggingCard.style.left = (e.clientX - areaRect.left - offsetX) + 'px';
+        draggingCard.style.top  = (e.clientY - areaRect.top  - offsetY) + 'px';
       });
-      document.addEventListener('mouseup', e => dragging = false);
+
+      document.addEventListener('mouseup', () => {
+        if (draggingCard) draggingCard.style.cursor = 'grab';
+        draggingCard = null;
+      });
 
       stickerArea.appendChild(card);
 
-      // collection/duplicates
+      // Collection logic
       if (userCollection.includes(num)) {
         if (!duplicates.includes(num)) duplicates.push(num);
       } else {
@@ -259,11 +291,14 @@
     document.getElementById('album').style.display = 'block';
     refreshAlbum();
   });
+
   document.getElementById('duplicates-btn').addEventListener('click', () => {
     document.getElementById('duplicates').style.display = 'block';
     refreshDuplicates();
   });
+
   document.getElementById('open-pack').addEventListener('click', openPack);
+
   document.getElementById('sell-duplicates').addEventListener('click', () => {
     coins += duplicates.length;
     duplicates.length = 0;
@@ -274,14 +309,17 @@
   function refreshAlbum() {
     const grid = document.getElementById('album-grid');
     grid.innerHTML = '';
-    for (let i=1; i<=STICKERS_TOTAL; i++) {
+
+    for (let i = 1; i <= STICKERS_TOTAL; i++) {
       const slot = document.createElement('div');
       slot.className = 'album-slot';
+
       if (userCollection.includes(i)) {
         slot.innerHTML = `<img src="images/${i}.png"><div>#${i}</div>`;
       } else {
         slot.textContent = '?';
       }
+
       grid.appendChild(slot);
     }
   }
@@ -289,6 +327,7 @@
   function refreshDuplicates() {
     const grid = document.getElementById('duplicates-grid');
     grid.innerHTML = '';
+
     duplicates.forEach(i => {
       const slot = document.createElement('div');
       slot.className = 'duplicate-slot';
