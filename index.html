@@ -57,15 +57,24 @@
     border: 2px solid #333;
     background: #ddd;
     position: absolute;
-    cursor: grab;
     transform-style: preserve-3d;
-    transition: transform 0.5s;
+    transition: transform 0.5s, left 0.8s ease-out, top 0.8s ease-out;
     user-select: none;
     touch-action: none;
+    cursor: pointer;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
   }
 
   .sticker-card.flipped {
-    transform: rotateY(180deg);
+    transform: rotateY(180deg) !important;
+  }
+
+  .sticker-card.stacked {
+    z-index: 10;
+  }
+
+  .sticker-card.spread {
+    z-index: 1;
   }
 
   .sticker-front, .sticker-back {
@@ -80,16 +89,30 @@
     font-weight: bold;
   }
 
+  .sticker-front {
+    background: linear-gradient(45deg, #ff6b6b, #ffa500);
+    color: white;
+  }
+
   .sticker-back {
     transform: rotateY(180deg);
     flex-direction: column;
+    background: white;
+    overflow: hidden;
   }
 
   .sticker-back img {
-    width: 140px;
-    height: 190px;
-    object-fit: cover;
+    max-width: 140px;
+    max-height: 190px;
+    object-fit: contain;
     margin-bottom: 5px;
+    transition: transform 0.3s;
+  }
+
+  .sticker-back img.landscape {
+    transform: rotate(90deg);
+    max-width: 190px;
+    max-height: 140px;
   }
 
   #open-pack {
@@ -118,7 +141,7 @@
     background: #fff;
     border: 2px solid #333;
     overflow: auto;
-    padding: 10px;
+    padding: 20px;
     z-index: 100;
   }
 
@@ -140,12 +163,20 @@
     flex-direction: column;
     font-size: 48px;
     color: #aaa;
+    overflow: hidden;
   }
 
   .album-slot img, .duplicate-slot img {
-    width: 100%;
-    height: 160px;
-    object-fit: cover;
+    max-width: 100%;
+    max-height: 160px;
+    object-fit: contain;
+    margin-bottom: 5px;
+  }
+
+  .album-slot img.landscape, .duplicate-slot img.landscape {
+    transform: rotate(90deg);
+    max-width: 160px;
+    max-height: 100px;
   }
 
   .close-btn {
@@ -167,6 +198,8 @@
 <header>
   <button id="album-btn">📖 ALBUM</button>
   <button id="duplicates-btn">📂 DUPLICATES</button>
+  <button id="save-btn">💾 SAVE</button>
+  <button id="reset-btn">🔄 RESET</button>
   <div id="coins">💰 Coins: 100</div>
   <div id="packs">📦 Packs Opened: 0</div>
 </header>
@@ -176,13 +209,13 @@
 <button id="open-pack">🎁 OPEN PACK (5 Coins)</button>
 
 <div id="album">
-  <div class="close-btn" onclick="album.style.display='none'">✖</div>
+  <div class="close-btn" onclick="document.getElementById('album').style.display='none'">✖</div>
   <h2>Sticker Album</h2>
   <div class="album-grid" id="album-grid"></div>
 </div>
 
 <div id="duplicates">
-  <div class="close-btn" onclick="duplicatesDiv.style.display='none'">✖</div>
+  <div class="close-btn" onclick="document.getElementById('duplicates').style.display='none'">✖</div>
   <h2>Duplicates</h2>
   <div class="duplicates-grid" id="duplicates-grid"></div>
   <button id="sell-duplicates">💰 Sell All Duplicates</button>
@@ -199,8 +232,45 @@ const stickerArea = document.getElementById('sticker-area');
 const coinsLabel = document.getElementById('coins');
 const packsLabel = document.getElementById('packs');
 const openPackBtn = document.getElementById('open-pack');
-const album = document.getElementById('album');
-const duplicatesDiv = document.getElementById('duplicates');
+
+// Function to check if image is landscape and rotate it
+function setupImageRotation(img, stickerNum) {
+  img.onload = function() {
+    // Check if image is wider than it is tall (landscape)
+    if (this.naturalWidth > this.naturalHeight) {
+      this.classList.add('landscape');
+    }
+  };
+  img.onerror = function() {
+    // If image fails to load, show number instead
+    const parent = this.parentElement;
+    parent.innerHTML = `<div style='font-size:60px;color:#333'>#${stickerNum}</div>`;
+  };
+}
+
+// Save game function
+function saveGame() {
+  const data = {
+    coins,
+    packsOpened,
+    userCollection,
+    duplicates
+  };
+  localStorage.setItem("stickerGameSave", JSON.stringify(data));
+}
+
+// Reset game function
+function resetGame() {
+  if (confirm("Are you sure you want to reset your account? You'll lose all progress!")) {
+    coins = 100;
+    packsOpened = 0;
+    userCollection.length = 0;
+    duplicates.length = 0;
+    localStorage.removeItem("stickerGameSave");
+    updateLabels();
+    stickerArea.innerHTML = '';
+  }
+}
 
 function updateLabels() {
   coinsLabel.textContent = `💰 Coins: ${coins}`;
@@ -224,104 +294,113 @@ function openPack() {
   stickerArea.innerHTML = '';
   const stickers = getRandomStickers(5);
 
+  // Center position for the stack
+  const centerX = stickerArea.offsetWidth / 2 - 80;
+  const centerY = stickerArea.offsetHeight / 2 - 120;
+
   stickers.forEach((num, i) => {
     const card = document.createElement('div');
-    card.className = 'sticker-card';
-    card.style.left = `${40 + i * 40}px`;
-    card.style.top = `60px`;
+    card.className = 'sticker-card stacked';
+    card.dataset.number = num;
+    
+    // Start all cards stacked in the center
+    card.style.left = `${centerX + i * 2}px`;
+    card.style.top = `${centerY + i * 2}px`;
+
+    const img = document.createElement('img');
+    img.src = `images/${num}.png`;
+    img.alt = `Sticker #${num}`;
+    
+    // Set up image rotation check
+    setupImageRotation(img, num);
 
     card.innerHTML = `
       <div class="sticker-front">?</div>
       <div class="sticker-back">
-        <img src="images/${num}.png">
+        <div id="img-container-${num}"></div>
         <div>#${num}</div>
       </div>
     `;
 
-    // One-time flip
-    card.addEventListener('click', () => {
+    // Add the image to the container
+    const imgContainer = card.querySelector(`#img-container-${num}`);
+    imgContainer.appendChild(img);
+
+    // Add click event immediately
+    card.addEventListener('click', function flipCard() {
       if (!card.classList.contains('flipped')) {
         card.classList.add('flipped');
       }
     });
 
-    // Drag system (mouse + touch)
-    let offsetX, offsetY, dragging = false;
-
-    function startDrag(x, y) {
-      const rect = card.getBoundingClientRect();
-      offsetX = x - rect.left;
-      offsetY = y - rect.top;
-      dragging = true;
-      card.style.cursor = 'grabbing';
-    }
-
-    function moveDrag(x, y) {
-      if (!dragging) return;
-      const area = stickerArea.getBoundingClientRect();
-      card.style.left = (x - area.left - offsetX) + 'px';
-      card.style.top  = (y - area.top  - offsetY) + 'px';
-    }
-
-    function stopDrag() {
-      dragging = false;
-      card.style.cursor = 'grab';
-    }
-
-    card.addEventListener('mousedown', e => startDrag(e.clientX, e.clientY));
-    document.addEventListener('mousemove', e => moveDrag(e.clientX, e.clientY));
-    document.addEventListener('mouseup', stopDrag);
-
-    card.addEventListener('touchstart', e => {
-      const t = e.touches[0];
-      startDrag(t.clientX, t.clientY);
-    });
-
-    document.addEventListener('touchmove', e => {
-      const t = e.touches[0];
-      moveDrag(t.clientX, t.clientY);
-    }, {passive:false});
-
-    document.addEventListener('touchend', stopDrag);
-
     stickerArea.appendChild(card);
-
+    
+    // Add to collection
     if (userCollection.includes(num)) {
       if (!duplicates.includes(num)) duplicates.push(num);
     } else {
       userCollection.push(num);
     }
   });
+
+  // Animate cards spreading out after a brief delay
+  setTimeout(() => {
+    const cards = document.querySelectorAll('.sticker-card');
+    const cardWidth = 160;
+    const areaWidth = stickerArea.offsetWidth;
+    
+    // Calculate spacing for 5 cards horizontally centered
+    const totalCardWidth = cardWidth * 5;
+    const spacing = (areaWidth - totalCardWidth) / 6;
+    const startX = spacing;
+    const yPos = stickerArea.offsetHeight / 2 - 120;
+    
+    cards.forEach((card, i) => {
+      card.classList.remove('stacked');
+      card.classList.add('spread');
+      
+      // Calculate final position
+      const finalX = startX + i * (cardWidth + spacing);
+      
+      // Move card to final position using left/top (not transform)
+      card.style.left = `${finalX}px`;
+      card.style.top = `${yPos}px`;
+    });
+  }, 300);
+  
+  saveGame();
 }
 
-document.getElementById('open-pack').addEventListener('click', openPack);
-
-document.getElementById('album-btn').onclick = () => {
-  album.style.display = 'block';
-  refreshAlbum();
-};
-
-document.getElementById('duplicates-btn').onclick = () => {
-  duplicatesDiv.style.display = 'block';
-  refreshDuplicates();
-};
-
-document.getElementById('sell-duplicates').onclick = () => {
-  coins += duplicates.length;
-  duplicates.length = 0;
-  updateLabels();
-  refreshDuplicates();
-};
-
+// Album and Duplicates Functions with image rotation
 function refreshAlbum() {
   const grid = document.getElementById('album-grid');
   grid.innerHTML = '';
   for (let i = 1; i <= STICKERS_TOTAL; i++) {
     const slot = document.createElement('div');
     slot.className = 'album-slot';
-    slot.innerHTML = userCollection.includes(i)
-      ? `<img src="images/${i}.png"><div>#${i}</div>`
-      : '?';
+    
+    if (userCollection.includes(i)) {
+      const img = document.createElement('img');
+      img.src = `images/${i}.png`;
+      img.alt = `Sticker #${i}`;
+      
+      // Set up image rotation check for album too
+      img.onload = function() {
+        if (this.naturalWidth > this.naturalHeight) {
+          this.classList.add('landscape');
+        }
+      };
+      img.onerror = function() {
+        const parent = this.parentElement;
+        parent.innerHTML = `<div style='font-size:24px;color:#333'>#${i}</div>`;
+      };
+      
+      slot.innerHTML = `<div>#${i}</div>`;
+      slot.insertBefore(img, slot.firstChild);
+    } else {
+      slot.innerHTML = '?';
+    }
+    
     grid.appendChild(slot);
   }
 }
@@ -332,11 +411,68 @@ function refreshDuplicates() {
   duplicates.forEach(i => {
     const slot = document.createElement('div');
     slot.className = 'duplicate-slot';
-    slot.innerHTML = `<img src="images/${i}.png"><div>#${i}</div>`;
+    
+    const img = document.createElement('img');
+    img.src = `images/${i}.png`;
+    img.alt = `Sticker #${i}`;
+    
+    // Set up image rotation check for duplicates too
+    img.onload = function() {
+      if (this.naturalWidth > this.naturalHeight) {
+        this.classList.add('landscape');
+      }
+    };
+    img.onerror = function() {
+      const parent = this.parentElement;
+      parent.innerHTML = `<div style='font-size:24px;color:#333'>#${i}</div>`;
+    };
+    
+    slot.innerHTML = `<div>#${i}</div>`;
+    slot.insertBefore(img, slot.firstChild);
     grid.appendChild(slot);
   });
 }
 
+// Event Listeners
+document.getElementById('open-pack').addEventListener('click', openPack);
+document.getElementById('save-btn').addEventListener('click', saveGame);
+document.getElementById('reset-btn').addEventListener('click', resetGame);
+
+document.getElementById('album-btn').addEventListener('click', () => {
+  document.getElementById('album').style.display = 'block';
+  refreshAlbum();
+});
+
+document.getElementById('duplicates-btn').addEventListener('click', () => {
+  document.getElementById('duplicates').style.display = 'block';
+  refreshDuplicates();
+});
+
+document.getElementById('sell-duplicates').addEventListener('click', () => {
+  coins += duplicates.length;
+  duplicates.length = 0;
+  updateLabels();
+  refreshDuplicates();
+  saveGame();
+});
+
+// Load game on startup
+function loadGame() {
+  const saved = localStorage.getItem("stickerGameSave");
+  if (!saved) return;
+
+  const data = JSON.parse(saved);
+  coins = data.coins;
+  packsOpened = data.packsOpened;
+  userCollection.length = 0;
+  duplicates.length = 0;
+  userCollection.push(...data.userCollection);
+  duplicates.push(...data.duplicates);
+
+  updateLabels();
+}
+
+loadGame();
 updateLabels();
 </script>
 
