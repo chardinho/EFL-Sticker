@@ -470,7 +470,7 @@ function resetGame() {
       localStorage.removeItem("stickerGameSave");
     } catch (e) {
       console.error("Failed to reset game:", e);
-    <!-- } -->
+    }
     updateLabels();
     stickerArea.innerHTML = '';
     vibrate(30);
