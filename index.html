@@ -20,7 +20,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    touch-action: none;
+	touch-action: pan-y;
+	overflow-y: auto;
     min-height: 100vh;
   }
 
@@ -441,12 +442,12 @@ function saveGame() {
 document.getElementById("coin-flip").addEventListener("click", () => {
   if (coins < 5) return alert("Not enough coins!");
 
-  coins -= 5;
-  const win = Math.random() < 0.5;
+  coins -= 10;
+  const win = Math.random() < 0.3;
 
   if (win) {
-    coins += 10;
-    alert("You won 10 coins!");
+    coins += 25;
+    alert("You won 25 coins!");
   } else {
     alert("You lost 😭");
   }
@@ -469,7 +470,7 @@ function resetGame() {
       localStorage.removeItem("stickerGameSave");
     } catch (e) {
       console.error("Failed to reset game:", e);
-    }
+    <!-- } -->
     updateLabels();
     stickerArea.innerHTML = '';
     vibrate(30);
