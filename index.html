@@ -443,7 +443,7 @@ document.getElementById("coin-flip").addEventListener("click", () => {
   if (coins < 5) return alert("Not enough coins!");
 
   coins -= 10;
-  const win = Math.random() < 0.3;
+  const win = Math.random() < 0.75;
 
   if (win) {
     coins += 25;
