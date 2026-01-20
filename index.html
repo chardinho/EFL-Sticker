@@ -364,6 +364,8 @@
   <button id="reset-btn">🔄 RESET</button>
   <div id="coins">💰 Coins: 100</div>
   <div id="packs">📦 Packs: 0</div>
+  <button id="coin-flip">🪙 Coin Flip</button>
+
 </header>
 
 <div id="sticker-area"></div>
@@ -435,6 +437,23 @@ function saveGame() {
     console.error("Failed to save game:", e);
   }
 }
+
+document.getElementById("coin-flip").addEventListener("click", () => {
+  if (coins < 5) return alert("Not enough coins!");
+
+  coins -= 5;
+  const win = Math.random() < 0.5;
+
+  if (win) {
+    coins += 10;
+    alert("You won 10 coins!");
+  } else {
+    alert("You lost 😭");
+  }
+
+  updateLabels();
+});
+
 
 // Reset game function
 function resetGame() {
