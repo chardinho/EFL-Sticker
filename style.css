@@ -306,15 +306,15 @@ header button:active {
     .album-grid, .duplicates-grid {
         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     }
-    
+
     header button {
         font-size: 16px;
     }
-    
+
     #coins, #packs {
         font-size: 16px;
     }
-    
+
     #open-pack {
         font-size: 20px;
     }
