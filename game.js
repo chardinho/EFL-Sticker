@@ -330,7 +330,7 @@ window.game = {
         }
     },
 
-// Album functions
+// Replace the refreshAlbum function in game.js with this version
     refreshAlbum: function() {
         const grid = document.getElementById('album-grid');
         const countLabel = document.getElementById('album-count');
@@ -365,39 +365,35 @@ window.game = {
 
                 // Add click event to show sticker in modal
                 slot.style.cursor = 'pointer';
-                slot.addEventListener('click', () => {
-                    this.displayStickerModal(i);
+
+                // Use a closure to capture the current value of i
+                (function(stickerNum) {
+                    slot.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.game.displayStickerModal(stickerNum);
+                    });
+                })(i);
+
+                // Simplified hover effects for desktop
+                slot.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.05)';
+                    this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
                 });
 
-                // Add hover effect
-                slot.addEventListener('mouseenter', () => {
-                    slot.style.transform = 'scale(1.05)';
-                    slot.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                    slot.style.transition = 'transform 0.2s, box-shadow 0.2s';
+                slot.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                    this.style.boxShadow = 'none';
                 });
 
-                slot.addEventListener('mouseleave', () => {
-                    slot.style.transform = 'scale(1)';
-                    slot.style.boxShadow = 'none';
-                });
+                // Touch feedback for mobile
+                slot.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.95)';
+                }, {passive: true});
 
-                // Add active/click effect
-                slot.addEventListener('mousedown', () => {
-                    slot.style.transform = 'scale(0.95)';
-                });
-
-                slot.addEventListener('mouseup', () => {
-                    slot.style.transform = 'scale(1.05)';
-                });
-
-                // For touch devices
-                slot.addEventListener('touchstart', () => {
-                    slot.style.transform = 'scale(0.95)';
-                });
-
-                slot.addEventListener('touchend', () => {
-                    slot.style.transform = 'scale(1)';
-                });
+                slot.addEventListener('touchend', function() {
+                    this.style.transform = 'scale(1)';
+                }, {passive: true});
             } else {
                 slot.innerHTML = '?';
                 slot.style.cursor = 'default';
@@ -528,7 +524,7 @@ window.game = {
         img.src = `images/${stickerNum}.png`;
         img.alt = `Sticker #${stickerNum}`;
         img.onload = function() {
-            if (this.naturalWidth > this.naturalHeight) {
+            if (this.naturalWidth > this.naturalHeight) {aa
                 this.classList.add('landscape');
             }
         };

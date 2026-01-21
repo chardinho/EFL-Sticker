@@ -1,5 +1,24 @@
 // Main initialization script
 document.addEventListener('DOMContentLoaded', async function() {
+    // Modal close handlers - set up immediately
+    const modal = document.getElementById('sticker-display-modal');
+
+    // Close modal when clicking outside the content
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (modal && e.key === 'Escape' && modal.style.display === 'flex') {
+            modal.style.display = 'none';
+        }
+    });
+
     // Wait for all scripts to load
     setTimeout(async function() {
         // Initialize auth listeners
@@ -21,23 +40,4 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Update labels
         window.game.updateLabels();
     }, 100); // Small delay to ensure all scripts are loaded
-
-    // Modal close handlers - moved outside nested DOMContentLoaded
-    const modal = document.getElementById('sticker-display-modal');
-
-    // Close modal when clicking outside the content
-    if (modal) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-    }
-
-    // Close modal with Escape key
-    document.addEventListener('keydown', function(e) {
-        if (modal && e.key === 'Escape' && modal.style.display === 'flex') {
-            modal.style.display = 'none';
-        }
-    });
 });
