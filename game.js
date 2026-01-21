@@ -39,7 +39,7 @@ window.game = {
     // Save game function
     saveGame: async function() {
         const { data: { user } } = await supabaseClient.auth.getUser();
-        
+
         if (!user) {
             console.error("Cannot save: No user logged in");
             return false;
@@ -73,7 +73,7 @@ window.game = {
     // Load game from Supabase
     loadGame: async function() {
         const { data: { user } } = await supabaseClient.auth.getUser();
-        
+
         if (!user) {
             window.auth.showAuthBox();
             return;
@@ -81,7 +81,7 @@ window.game = {
 
         // Show logout button
         document.getElementById("logout-btn").style.display = "inline-block";
-        
+
         // Load from Supabase
         const { data, error } = await supabaseClient
             .from("saves")
@@ -91,7 +91,7 @@ window.game = {
 
         if (error) {
             console.error("Load error:", error);
-            
+
             // If no save exists, create one
             if (error.code === 'PGRST116') {
                 console.log("No save found, creating initial save...");
@@ -99,27 +99,27 @@ window.game = {
             }
         } else if (data) {
             console.log("Loaded save data:", data);
-            
+
             // Load game data
             this.coins = data.coins ?? 100;
             this.packsOpened = data.packs_opened ?? 0;
-            
+
             // Clear and reload collections
             this.userCollection.length = 0;
             if (data.collection && Array.isArray(data.collection)) {
                 this.userCollection.push(...data.collection);
             }
-            
+
             // Clear and reload duplicates
             for (let key in this.duplicates) delete this.duplicates[key];
             if (data.duplicates && typeof data.duplicates === 'object') {
                 Object.assign(this.duplicates, data.duplicates);
             }
-            
+
             console.log("Loaded collection:", this.userCollection);
             console.log("Loaded duplicates:", this.duplicates);
         }
-        
+
         // Update user display and labels
         await window.auth.updateUserDisplay();
         this.updateLabels();
@@ -204,7 +204,7 @@ window.game = {
             alert("Not enough coins!");
             return;
         }
-        
+
         this.packInProgress = true;
         this.openPackBtn.disabled = true;
         this.openPackBtn.classList.add('disabled');
@@ -229,7 +229,7 @@ window.game = {
             const card = document.createElement('div');
             card.className = 'sticker-card stacked';
             card.dataset.number = num;
-            
+
             card.style.left = `${centerX + i * 2}px`;
             card.style.top = `${centerY + i * 2}px`;
 
@@ -273,6 +273,9 @@ window.game = {
 
                         this.updateLabels();
                     }
+                } else {
+                    // Display the flipped sticker in a modal
+                    this.displayStickerModal(num);
                 }
             });
 
@@ -293,33 +296,33 @@ window.game = {
             const cards = document.querySelectorAll('.sticker-card');
             const areaWidth = this.stickerArea.offsetWidth;
             const areaHeight = this.stickerArea.offsetHeight;
-            
+
             const isMobile = areaWidth < 600;
             const cardsPerRow = isMobile ? Math.min(3, cards.length) : 5;
-            
+
             cards.forEach((card, i) => {
                 card.classList.remove('stacked');
                 card.classList.add('spread');
-                
+
                 const row = Math.floor(i / cardsPerRow);
                 const col = i % cardsPerRow;
-                
+
                 const cardWidth = 160;
                 const cardHeight = 240;
                 const spacing = isMobile ? 10 : 20;
-                
+
                 const totalWidth = cardsPerRow * cardWidth + (cardsPerRow - 1) * spacing;
                 const startX = (areaWidth - totalWidth) / 2;
                 const startY = (areaHeight - cardHeight) / 2 - row * (cardHeight / 2);
-                
+
                 const finalX = startX + col * (cardWidth + spacing);
                 const finalY = Math.max(10, startY + row * (cardHeight + spacing));
-                
+
                 card.style.left = `${finalX}px`;
                 card.style.top = `${finalY}px`;
             });
         }, 300);
-        
+
         // Save after opening pack
         const saved = await this.saveGame();
         if (!saved) {
@@ -327,7 +330,7 @@ window.game = {
         }
     },
 
-    // Album functions
+// Album functions
     refreshAlbum: function() {
         const grid = document.getElementById('album-grid');
         const countLabel = document.getElementById('album-count');
@@ -340,6 +343,7 @@ window.game = {
             const slot = document.createElement('div');
             slot.className = 'album-slot';
 
+            // Make collected stickers clickable
             if (this.userCollection.includes(i)) {
                 const img = document.createElement('img');
                 img.src = `images/${i}.png`;
@@ -358,39 +362,75 @@ window.game = {
 
                 slot.innerHTML = `<div class="slot-number">#${i}</div>`;
                 slot.insertBefore(img, slot.firstChild);
+
+                // Add click event to show sticker in modal
+                slot.style.cursor = 'pointer';
+                slot.addEventListener('click', () => {
+                    this.displayStickerModal(i);
+                });
+
+                // Add hover effect
+                slot.addEventListener('mouseenter', () => {
+                    slot.style.transform = 'scale(1.05)';
+                    slot.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                    slot.style.transition = 'transform 0.2s, box-shadow 0.2s';
+                });
+
+                slot.addEventListener('mouseleave', () => {
+                    slot.style.transform = 'scale(1)';
+                    slot.style.boxShadow = 'none';
+                });
+
+                // Add active/click effect
+                slot.addEventListener('mousedown', () => {
+                    slot.style.transform = 'scale(0.95)';
+                });
+
+                slot.addEventListener('mouseup', () => {
+                    slot.style.transform = 'scale(1.05)';
+                });
+
+                // For touch devices
+                slot.addEventListener('touchstart', () => {
+                    slot.style.transform = 'scale(0.95)';
+                });
+
+                slot.addEventListener('touchend', () => {
+                    slot.style.transform = 'scale(1)';
+                });
             } else {
                 slot.innerHTML = '?';
+                slot.style.cursor = 'default';
             }
 
             grid.appendChild(slot);
         }
     },
-
     // Duplicates functions
     refreshDuplicates: function() {
         const grid = document.getElementById('duplicates-grid');
         grid.innerHTML = '';
-        
+
         const duplicateKeys = Object.keys(this.duplicates);
         console.log("Refreshing duplicates, count:", duplicateKeys.length);
-        
+
         if (duplicateKeys.length === 0) {
             grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999; padding: 40px;">No duplicates yet!</p>';
             return;
         }
-        
+
         duplicateKeys.forEach(key => {
             const i = parseInt(key);
             const count = this.duplicates[key];
-            
+
             const slot = document.createElement('div');
             slot.className = 'duplicate-slot';
             slot.style.position = 'relative';
-            
+
             const img = document.createElement('img');
             img.src = `images/${i}.png`;
             img.alt = `Sticker #${i}`;
-            
+
             img.onload = function() {
                 if (this.naturalWidth > this.naturalHeight) {
                     this.classList.add('landscape');
@@ -401,7 +441,7 @@ window.game = {
                 const parent = this.parentElement;
                 parent.innerHTML = `<div style='font-size:24px;color:#333'>#${i}</div><div style="position: absolute; top: 5px; right: 5px; background: #ff6b6b; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold;">×${count}</div>`;
             };
-            
+
             slot.innerHTML = `
                 <div class="slot-number">#${i}</div>
                 <div style="position: absolute; top: 5px; right: 5px; background: #ff6b6b; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">×${count}</div>
@@ -418,18 +458,18 @@ window.game = {
             alert('No duplicates to sell!');
             return;
         }
-        
+
         let totalDuplicates = 0;
         duplicateKeys.forEach(key => {
             totalDuplicates += this.duplicates[key];
         });
-        
+
         this.coins += totalDuplicates;
-        
+
         for (let key in this.duplicates) {
             delete this.duplicates[key];
         }
-        
+
         this.updateLabels();
         this.refreshDuplicates();
         const saved = await this.saveGame();
@@ -452,22 +492,52 @@ window.game = {
                 alert('Failed to save game!');
             }
         });
-        
+
         document.getElementById('reset-btn').addEventListener('click', () => this.resetGame());
         document.getElementById('coin-flip').addEventListener('click', () => this.coinFlipGame());
-        
+
         document.getElementById('album-btn').addEventListener('click', () => {
             document.getElementById('album').style.display = 'block';
             this.refreshAlbum();
             utils.vibrate(10);
         });
-        
+
         document.getElementById('duplicates-btn').addEventListener('click', () => {
             document.getElementById('duplicates').style.display = 'block';
             this.refreshDuplicates();
             utils.vibrate(10);
         });
-        
+
         document.getElementById('sell-duplicates').addEventListener('click', () => this.sellDuplicates());
+    },
+
+    // Display sticker modal
+    displayStickerModal: function(stickerNum) {
+        const modal = document.getElementById('sticker-display-modal');
+        const imgContainer = document.getElementById('sticker-display-img-container');
+        const numberDisplay = document.getElementById('sticker-display-number');
+
+        if (!modal || !imgContainer || !numberDisplay) return;
+
+        // Clear previous content
+        imgContainer.innerHTML = '';
+        numberDisplay.textContent = `#${stickerNum}`;
+
+        // Create and setup the image
+        const img = document.createElement('img');
+        img.src = `images/${stickerNum}.png`;
+        img.alt = `Sticker #${stickerNum}`;
+        img.onload = function() {
+            if (this.naturalWidth > this.naturalHeight) {
+                this.classList.add('landscape');
+            }
+        };
+        img.onerror = function() {
+            imgContainer.innerHTML = `<div style='font-size: 60px; color: #333; text-align: center;'>#${stickerNum}</div>`;
+        };
+
+        imgContainer.appendChild(img);
+        modal.style.display = 'flex';
+        utils.vibrate(10);
     }
 };

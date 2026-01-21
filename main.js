@@ -21,4 +21,24 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Update labels
         window.game.updateLabels();
     }, 100); // Small delay to ensure all scripts are loaded
+
+
+    // Add this to main.js or in a separate script
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('sticker-display-modal');
+
+        // Close modal when clicking outside the content
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.style.display === 'flex') {
+                modal.style.display = 'none';
+            }
+        });
+    });
 });
