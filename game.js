@@ -1,7 +1,7 @@
 // Game logic module
 window.game = {
     // Game state
-    STICKERS_TOTAL: 692,
+    STICKERS_TOTAL: 700,
     coins: 100,
     packsOpened: 0,
     flippedCount: 0,
@@ -238,18 +238,12 @@ window.game = {
             img.alt = `Sticker #${num}`;
 
             card.innerHTML = `
-                <div class="sticker-front">
-                    <div class="card-number">#${num}</div>
-                    <div class="card-category">${utils.getStickerCategory(num)}</div>
-                </div>    
+                <div class="sticker-front">?</div>
                 <div class="sticker-back">
                     <div id="img-container-${num}"></div>
                     <div class="card-number">#${num}</div>
                 </div>
             `;
-
-            const category = utils.getStickerCategory(num).toLowerCase().replace(/ /g, '-');
-            card.dataset.category = category;
 
             const cardBack = card.querySelector('.sticker-back');
             utils.setupImageRotation(img, num, cardBack);
@@ -335,182 +329,79 @@ window.game = {
             console.error("Failed to save after opening pack!");
         }
     },
-// Replace the entire refreshAlbum function with this:
+
+// Replace the refreshAlbum function in game.js with this version
     refreshAlbum: function() {
-        const sectionsContainer = document.getElementById('album-sections');
+        const grid = document.getElementById('album-grid');
         const countLabel = document.getElementById('album-count');
-        sectionsContainer.innerHTML = '';
+        grid.innerHTML = '';
 
         const collectedCount = this.userCollection.length;
-        const percentage = Math.round((collectedCount / this.STICKERS_TOTAL) * 100);
+        countLabel.textContent = `Collected ${collectedCount} / ${this.STICKERS_TOTAL} stickers`;
 
-        // Simple text display
-        countLabel.innerHTML = `
-        <div>${collectedCount} / ${this.STICKERS_TOTAL} stickers</div>
-        <div class="progress-text">${percentage}% complete</div>
-    `;
-        const collectedPercent = (collectedCount / this.STICKERS_TOTAL) * 100;
-        countLabel.style.setProperty('--progress-width', `${collectedPercent}%`);
+        for (let i = 1; i <= this.STICKERS_TOTAL; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'album-slot';
 
-        // Define categories in order
-        const categories = [
-            { id: 'magic-moments', name: '✨ Magic Moments', range: [1, 16] },
-            { id: 'championship-1', name: '🏆 Championship Part 1', range: [17, 232] },
-            { id: 'elite', name: '⭐ ELITE', range: [233, 256] },
-            { id: 'championship-2', name: '🏆 Championship Part 2', range: [257, 472] },
-            { id: 'ones-to-watch', name: '👀 Ones to Watch', range: [473, 484] },
-            { id: 'league-one', name: '⚽ League One', range: [485, 676] },
-            { id: 'raised-efl', name: '🎓 Raised in EFL', range: [677, 692] }
-        ];
+            // Make collected stickers clickable
+            if (this.userCollection.includes(i)) {
+                const img = document.createElement('img');
+                img.src = `images/${i}.png`;
+                img.alt = `Sticker #${i}`;
 
-        // Create sections for each category
-        categories.forEach(category => {
-            const section = document.createElement('div');
-            section.className = 'album-section';
-            section.id = `section-${category.id}`;
+                img.onload = function() {
+                    if (this.naturalWidth > this.naturalHeight) {
+                        this.classList.add('landscape');
+                        slot.classList.add('has-landscape');
+                    }
+                };
+                img.onerror = function() {
+                    const parent = this.parentElement;
+                    parent.innerHTML = `<div style='font-size:24px;color:#333'>#${i}</div>`;
+                };
 
-            // Count collected in this category
-            const collectedInCategory = this.userCollection.filter(num =>
-                num >= category.range[0] && num <= category.range[1]
-            ).length;
+                slot.innerHTML = `<div class="slot-number">#${i}</div>`;
+                slot.insertBefore(img, slot.firstChild);
 
-            const totalInCategory = category.range[1] - category.range[0] + 1;
+                // Add click event to show sticker in modal
+                slot.style.cursor = 'pointer';
 
-            // Section header
-            section.innerHTML = `
-            <div class="section-header">
-                <div class="section-title">${category.name}</div>
-                <div class="section-count">${collectedInCategory} / ${totalInCategory}</div>
-            </div>
-            <div class="album-grid" id="grid-${category.id}"></div>
-        `;
-
-            // Create grid for this section
-            const grid = section.querySelector(`#grid-${category.id}`);
-
-            // Fill the grid with stickers in this category
-            for (let i = category.range[0]; i <= category.range[1]; i++) {
-                const slot = document.createElement('div');
-                slot.className = 'album-slot';
-                slot.dataset.stickerNumber = i;
-                slot.dataset.category = category.id;
-
-                if (this.userCollection.includes(i)) {
-                    const img = document.createElement('img');
-                    img.src = `images/${i}.png`;
-                    img.alt = `Sticker #${i}`;
-
-                    img.onload = function() {
-                        if (this.naturalWidth > this.naturalHeight) {
-                            this.classList.add('landscape');
-                            slot.classList.add('has-landscape');
-                        }
-                    };
-                    img.onerror = function() {
-                        const parent = this.parentElement;
-                        parent.innerHTML = `<div style='font-size:24px;color:#333'>#${i}</div>`;
-                    };
-
-                    slot.innerHTML = `<div class="slot-number">#${i}</div>`;
-                    slot.insertBefore(img, slot.firstChild);
-                    slot.style.cursor = 'pointer';
-
-                    // Click to show modal
-                    (function(stickerNum) {
-                        slot.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            window.game.displayStickerModal(stickerNum);
-                        });
-                    })(i);
-
-                    // Hover effects
-                    slot.addEventListener('mouseenter', function() {
-                        this.style.transform = 'scale(1.05)';
-                        this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                // Use a closure to capture the current value of i
+                (function(stickerNum) {
+                    slot.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.game.displayStickerModal(stickerNum);
                     });
+                })(i);
 
-                    slot.addEventListener('mouseleave', function() {
-                        this.style.transform = 'scale(1)';
-                        this.style.boxShadow = 'none';
-                    });
+                // Simplified hover effects for desktop
+                slot.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.05)';
+                    this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                });
 
-                    // Touch feedback
-                    slot.addEventListener('touchstart', function() {
-                        this.style.transform = 'scale(0.95)';
-                    }, {passive: true});
+                slot.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                    this.style.boxShadow = 'none';
+                });
 
-                    slot.addEventListener('touchend', function() {
-                        this.style.transform = 'scale(1)';
-                    }, {passive: true});
-                } else {
-                    slot.innerHTML = '?';
-                    slot.style.cursor = 'default';
-                }
+                // Touch feedback for mobile
+                slot.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.95)';
+                }, {passive: true});
 
-                grid.appendChild(slot);
+                slot.addEventListener('touchend', function() {
+                    this.style.transform = 'scale(1)';
+                }, {passive: true});
+            } else {
+                slot.innerHTML = '?';
+                slot.style.cursor = 'default';
             }
 
-            sectionsContainer.appendChild(section);
-        });
-
-        // Initialize tab filtering
-        this.initAlbumTabs();
-    },
-
-// Initialize album tab filtering
-    initAlbumTabs: function() {
-        const tabs = document.querySelectorAll('.album-tab');
-        if (tabs.length === 0) return;
-
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Update active tab
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-
-                // Filter sections
-                const category = tab.dataset.category;
-                this.filterAlbumSections(category);
-            });
-        });
-    },
-
-// Filter album sections by category
-    filterAlbumSections: function(category) {
-        const sections = document.querySelectorAll('.album-section');
-
-        if (category === 'all') {
-            // Show all sections
-            sections.forEach(section => {
-                section.style.display = 'block';
-            });
-        } else if (category === 'championship') {
-            // Show both championship sections
-            sections.forEach(section => {
-                if (section.id === 'section-championship-1' || section.id === 'section-championship-2') {
-                    section.style.display = 'block';
-                } else {
-                    section.style.display = 'none';
-                }
-            });
-        } else {
-            // Show only selected category
-            sections.forEach(section => {
-                if (section.id === `section-${category}`) {
-                    section.style.display = 'block';
-                } else {
-                    section.style.display = 'none';
-                }
-            });
+            grid.appendChild(slot);
         }
-
-        // Scroll to top when changing tabs
-        document.getElementById('album').scrollTop = 0;
     },
-
-
-
     // Duplicates functions
     refreshDuplicates: function() {
         const grid = document.getElementById('duplicates-grid');
@@ -600,7 +491,6 @@ window.game = {
 
         document.getElementById('reset-btn').addEventListener('click', () => this.resetGame());
         document.getElementById('coin-flip').addEventListener('click', () => this.coinFlipGame());
-
 
         document.getElementById('album-btn').addEventListener('click', () => {
             document.getElementById('album').style.display = 'block';

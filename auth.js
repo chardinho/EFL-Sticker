@@ -5,11 +5,6 @@ window.auth = {
     statusText: document.getElementById("auth-status"),
     logoutBtn: document.getElementById("logout-btn"),
     
-    // Generate email from username (local function - no dependency on utils)
-    generateEmailFromUsername: function(username) {
-        return `${username.toLowerCase().replace(/[^a-z0-9]/g, '')}@sticker.game`;
-    },
-
     // Get current user's username
     getCurrentUsername: async function() {
         const { data: { user } } = await supabaseClient.auth.getUser();
@@ -87,7 +82,7 @@ window.auth = {
         this.statusText.style.color = "#666";
 
         try {
-            const email = this.generateEmailFromUsername(username);
+            const email = utils.generateEmailFromUsername(username);
             
             // Check if username already exists
             const { data: existingUser } = await supabaseClient
@@ -185,7 +180,7 @@ window.auth = {
                 return;
             }
 
-            const email = this.generateEmailFromUsername(username);
+            const email = utils.generateEmailFromUsername(username);
             
             const { error } = await supabaseClient.auth.signInWithPassword({
                 email,

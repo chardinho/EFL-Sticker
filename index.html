@@ -36,26 +36,14 @@
     <div id="sticker-area"></div>
     <button id="open-pack">🎁 OPEN PACK (5 Coins)</button>
 
-    <!-- Album Modal in index.html -->
+    <!-- Album Modal -->
     <div id="album">
         <div class="close-btn" onclick="document.getElementById('album').style.display='none'">✖</div>
         <h2>Sticker Album</h2>
-        <div id="album-count">Collected 0 / 692 stickers</div>
-
-        <!-- Category Filter Tabs -->
-        <div id="album-tabs" style="display: flex; gap: 5px; margin: 10px 0; flex-wrap: wrap; justify-content: center;">
-            <button class="album-tab active" data-category="all">All Stickers</button>
-            <button class="album-tab" data-category="magic-moments">✨ Magic Moments</button>
-            <button class="album-tab" data-category="championship">🏆 Championship</button>
-            <button class="album-tab" data-category="elite">⭐ ELITE</button>
-            <button class="album-tab" data-category="ones-to-watch">👀 Ones to Watch</button>
-            <button class="album-tab" data-category="league-one">⚽ League One</button>
-            <button class="album-tab" data-category="raised-efl">🎓 Raised in EFL</button>
-        </div>
-
-        <!-- Category Sections -->
-        <div id="album-sections"></div>
+        <div id="album-count">Collected 0 / 700 stickers</div>
+        <div class="album-grid" id="album-grid"></div>
     </div>
+
     <!-- Duplicates Modal -->
     <div id="duplicates">
         <div class="close-btn" onclick="document.getElementById('duplicates').style.display='none'">✖</div>
@@ -74,18 +62,13 @@
     <!-- Load Supabase first -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
-
-    <!-- Load utils.js before game.js (since game.js uses utils) -->
+    
+    <!-- Load other scripts in order -->
     <script src="utils.js"></script>
-
-    <!-- Load auth.js (now independent) -->
     <script src="auth.js"></script>
-
-    <!-- Load game.js -->
     <script src="game.js"></script>
-
-    <!-- Load main.js last -->
     <script src="main.js"></script>
+
 
     <div id="sticker-display-modal">
         <div class="modal-content">
