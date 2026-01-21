@@ -285,10 +285,12 @@
   }
 
   #open-pack.disabled {
-    background: #999;
+    background: #ff3b3b;   /* RED */
+    color: white;
     cursor: not-allowed;
     box-shadow: none;
   }
+
 
   #album, #duplicates {
     display: none;
@@ -482,13 +484,17 @@
 </div>
 
 <script>
+
 const supabaseUrl = "https://djpxosljltycswayletr.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqcHhvc2xqbHR5Y3N3YXlsZXRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5MTU5MjMsImV4cCI6MjA4NDQ5MTkyM30.bPesylaMS5wJSmHl3mIr2Ql3gAI5snULpBnBVdJYP2w";
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
+let packInProgress = false;
+
 const STICKERS_TOTAL = 700;
 let coins = 100;
 let packsOpened = 0;
+let flippedCount = 0;
 const userCollection = [];
 const duplicates = {};
 
@@ -907,7 +913,8 @@ async function resetGame() {
 function updateLabels() {
   coinsLabel.textContent = `💰 Coins: ${coins}`;
   packsLabel.textContent = `📦 Packs: ${packsOpened}`;
-  openPackBtn.classList.toggle('disabled', coins < 5);
+  openPackBtn.classList.toggle('disabled', coins < 5 || packInProgress);
+
 }
 
 // Get random stickers
@@ -917,8 +924,10 @@ function getRandomStickers(count) {
   return nums.slice(0, count);
 }
 
-// Open pack function
+
 async function openPack() {
+  if (packInProgress) return;   // <-- HARD BLOCK
+
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) {
     alert("Please login first!");
@@ -929,10 +938,17 @@ async function openPack() {
     alert("Not enough coins!");
     return;
   }
+  packInProgress = true;
+  openPackBtn.disabled = true;
+  openPackBtn.classList.add('disabled');   // <-- RED
+  flippedCount = 0;
+  openPackBtn.textContent = "🔒 Flip all cards first";
 
   coins -= 5;
   packsOpened++;
-  updateLabels();
+
+  updateLabels()
+
   vibrate(50);
 
   stickerArea.innerHTML = '';
@@ -971,11 +987,32 @@ async function openPack() {
       if (!card.classList.contains('flipped')) {
         card.classList.add('flipped');
         vibrate(15);
+
+        flippedCount++;
+
+        if (flippedCount === 5) {
+          packInProgress = false;
+
+          if (coins >= 5) {
+            openPackBtn.disabled = false;
+            openPackBtn.classList.remove('disabled');
+            openPackBtn.textContent = "🎁 OPEN PACK (5 Coins)";
+          } else {
+            openPackBtn.disabled = true;
+            openPackBtn.classList.add('disabled');
+            openPackBtn.textContent = "❌ Not enough coins";
+          }
+
+          updateLabels(); // keeps UI in sync
+        }
+
       }
     });
 
+
+
     stickerArea.appendChild(card);
-    
+
     // Add to collection or duplicates
     if (userCollection.includes(num)) {
       duplicates[num] = (duplicates[num] || 0) + 1;
