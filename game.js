@@ -520,12 +520,20 @@ window.game = {
         const modal = document.getElementById('sticker-display-modal');
         const imgContainer = document.getElementById('sticker-display-img-container');
         const numberDisplay = document.getElementById('sticker-display-number');
+        const modalContent = modal.querySelector('.modal-content');
 
         if (!modal || !imgContainer || !numberDisplay) return;
 
-        // Clear previous content
+        // Clear previous content and classes
         imgContainer.innerHTML = '';
         numberDisplay.textContent = `#${stickerNum}`;
+
+        // Remove any existing category classes
+        modalContent.className = 'modal-content';
+
+        // Get the category and add it as a class
+        const category = utils.getStickerCategory(stickerNum).toLowerCase().replace(/ /g, '-');
+        modalContent.classList.add(`category-${category}`);
 
         // Create and setup the image
         const img = document.createElement('img');

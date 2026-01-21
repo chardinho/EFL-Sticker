@@ -666,32 +666,100 @@ h2 {
 .sticker-card[data-category="league-one"] .card-number {
     color: #1565c0;
 }
+/* style.css - Add these styles at the end of the file */
 
-/* Remove or comment out the old .sticker-front and .sticker-back styles */
-/* Remove these lines if they exist:
-.sticker-front, .sticker-back {
-    position: absolute;
+/* Modal Category Background Colors */
+#sticker-display-modal .modal-content.category-magic-moments {
+    background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+    border: 3px solid #7b1fa2;
+}
+
+#sticker-display-modal .modal-content.category-elite {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    border: 3px solid #ef6c00;
+}
+
+#sticker-display-modal .modal-content.category-championship {
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+    border: 3px solid #2e7d32;
+}
+
+#sticker-display-modal .modal-content.category-ones-to-watch {
+    background: linear-gradient(135deg, #fce4ec, #f8bbd9);
+    border: 3px solid #c2185b;
+}
+
+#sticker-display-modal .modal-content.category-league-one {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border: 3px solid #1565c0;
+}
+
+#sticker-display-modal .modal-content.category-raised-in-the-efl {
+    background: linear-gradient(135deg, #f5f5f5, #eeeeee);
+    border: 3px solid #616161;
+}
+
+/* Update number display to be visible on all backgrounds */
+#sticker-display-modal .modal-content.category-magic-moments #sticker-display-number {
+    background: rgba(255, 255, 255, 0.9);
+    color: #7b1fa2;
+    border: 2px solid #7b1fa2;
+}
+
+#sticker-display-modal .modal-content.category-elite #sticker-display-number {
+    background: rgba(255, 255, 255, 0.9);
+    color: #ef6c00;
+    border: 2px solid #ef6c00;
+}
+
+#sticker-display-modal .modal-content.category-championship #sticker-display-number {
+    background: rgba(255, 255, 255, 0.9);
+    color: #2e7d32;
+    border: 2px solid #2e7d32;
+}
+
+#sticker-display-modal .modal-content.category-ones-to-watch #sticker-display-number {
+    background: rgba(255, 255, 255, 0.9);
+    color: #c2185b;
+    border: 2px solid #c2185b;
+}
+
+#sticker-display-modal .modal-content.category-league-one #sticker-display-number {
+    background: rgba(255, 255, 255, 0.9);
+    color: #1565c0;
+    border: 2px solid #1565c0;
+}
+
+#sticker-display-modal .modal-content.category-raised-in-the-efl #sticker-display-number {
+    background: rgba(255, 255, 255, 0.9);
+    color: #616161;
+    border: 2px solid #616161;
+}
+
+/* Make the close button stand out on all backgrounds */
+#sticker-display-modal .modal-content .close-btn {
+    background: #ff6b6b;
+    color: white;
+    border: 2px solid #333;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    z-index: 1001;
+}
+
+#sticker-display-modal .modal-content .close-btn:active {
+    background: #ff4757;
+}
+
+/* Ensure image container has good contrast */
+#sticker-display-img-container {
     width: 100%;
-    height: 100%;
-    backface-visibility: hidden;
+    height: 300px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 48px;
-    font-weight: bold;
-    border-radius: 6px;
-}
+    margin: 20px 0;
+    border-radius: 8px;
+    /* REMOVE the white background and padding */
+    background: transparent !important;
+    padding: 0 !important;
 
-.sticker-front {
-    background: linear-gradient(45deg, #ff6b6b, #ffa500);
-    color: white;
 }
-
-.sticker-back {
-    transform: rotateY(180deg);
-    flex-direction: column;
-    background: white;
-    overflow: hidden;
-    padding: 10px;
-}
-*/
