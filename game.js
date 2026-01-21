@@ -1,7 +1,7 @@
 // Game logic module
 window.game = {
     // Game state
-    STICKERS_TOTAL: 700,
+    STICKERS_TOTAL: 692,
     coins: 100,
     packsOpened: 0,
     flippedCount: 0,
@@ -238,18 +238,26 @@ window.game = {
             img.alt = `Sticker #${num}`;
 
             card.innerHTML = `
-                <div class="sticker-front">?</div>
+                <div class="sticker-front">
+                    <div class="card-number">#${num}</div>
+                    <div class="card-category">${utils.getStickerCategory(num)}</div>
+                </div>    
                 <div class="sticker-back">
                     <div id="img-container-${num}"></div>
                     <div class="card-number">#${num}</div>
                 </div>
             `;
 
+            // Add this line after creating the card element:
+            const category = utils.getStickerCategory(num).toLowerCase().replace(/ /g, '-');
+            card.dataset.category = category;
+
             const cardBack = card.querySelector('.sticker-back');
             utils.setupImageRotation(img, num, cardBack);
 
             const imgContainer = card.querySelector(`#img-container-${num}`);
             imgContainer.appendChild(img);
+
 
             card.addEventListener('click', () => {
                 if (!card.classList.contains('flipped')) {
@@ -524,7 +532,7 @@ window.game = {
         img.src = `images/${stickerNum}.png`;
         img.alt = `Sticker #${stickerNum}`;
         img.onload = function() {
-            if (this.naturalWidth > this.naturalHeight) {aa
+            if (this.naturalWidth > this.naturalHeight) {
                 this.classList.add('landscape');
             }
         };
