@@ -899,7 +899,13 @@ async function resetGame() {
 
   updateLabels();
   stickerArea.innerHTML = '';
-  
+
+  openPackBtn.disabled = false;
+  openPackBtn.classList.remove('disabled');
+  openPackBtn.textContent = "🎁 OPEN PACK (5 Coins)";
+  packInProgress = false;
+
+
   const saved = await saveGame();
   if (saved) {
     vibrate(30);
@@ -944,11 +950,12 @@ async function openPack() {
   flippedCount = 0;
   openPackBtn.textContent = "🔒 Flip all cards first";
 
+  updateLabels()
   coins -= 5;
   packsOpened++;
 
   updateLabels()
-
+  
   vibrate(50);
 
   stickerArea.innerHTML = '';
