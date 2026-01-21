@@ -898,3 +898,66 @@ h2 {
     padding: 0 !important;
 
 }
+
+/* NEW Label on flipped stickers */
+.new-label {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(45deg, #ff6b6b, #ff4757);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 12px;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    z-index: 5;
+    animation: pulse 1.5s infinite;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Animation for the NEW label */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(255,107,107,0.4);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+}
+
+/* Adjust image container position when NEW label is present */
+.sticker-back:has(.new-label) #img-container-${num} {
+    margin-top: 10px;
+}
+
+/* Ensure NEW label is visible on all category backgrounds */
+.sticker-card[data-category="magic-moments"] .new-label,
+.sticker-card[data-category="elite"] .new-label,
+.sticker-card[data-category="championship"] .new-label,
+.sticker-card[data-category="ones-to-watch"] .new-label,
+.sticker-card[data-category="league-one"] .new-label,
+.sticker-card[data-category="raised-in-the-efl"] .new-label {
+    background: linear-gradient(45deg, #ff6b6b, #ff4757);
+    color: white;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Mobile adjustments for NEW label */
+@media (max-width: 600px) {
+    .new-label {
+        font-size: 10px;
+        padding: 3px 6px;
+        top: 5px;
+        right: 5px;
+    }
+}

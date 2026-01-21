@@ -184,12 +184,27 @@ window.game = {
     },
 
     // Update UI labels
+// Update UI labels
     updateLabels: function() {
         this.coinsLabel.textContent = `💰 Coins: ${this.coins}`;
         this.packsLabel.textContent = `📦 Packs: ${this.packsOpened}`;
-        this.openPackBtn.classList.toggle('disabled', this.coins < 5 || this.packInProgress);
-    },
 
+        // Update open pack button state
+        if (this.packInProgress) {
+            this.openPackBtn.disabled = true;
+            this.openPackBtn.classList.add('disabled');
+            this.openPackBtn.textContent = "🔒 Flip all cards first";
+        } else if (this.coins < 5) {
+            this.openPackBtn.disabled = true;
+            this.openPackBtn.classList.add('disabled');
+            this.openPackBtn.textContent = "❌ Not enough coins";
+        } else {
+            this.openPackBtn.disabled = false;
+            this.openPackBtn.classList.remove('disabled');
+            this.openPackBtn.textContent = "🎁 OPEN PACK (5 Coins)";
+        }
+    },
+    // Open pack
     // Open pack
     openPack: async function() {
         if (this.packInProgress) return;
@@ -237,27 +252,38 @@ window.game = {
             img.src = `images/${num}.png`;
             img.alt = `Sticker #${num}`;
 
-            card.innerHTML = `
-                <div class="sticker-front">
-                    <div class="card-number">#${num}</div>
-                    <div class="card-category">${utils.getStickerCategory(num)}</div>
-                </div>    
-                <div class="sticker-back">
-                    <div id="img-container-${num}"></div>
-                    <div class="card-number">#${num}</div>
-                </div>
-            `;
+            // Check if this is a new sticker
+            const isNew = !this.userCollection.includes(num);
 
-            // Add this line after creating the card element:
+            // Update collection BEFORE creating card to ensure proper isNew status
+            if (isNew) {
+                this.userCollection.push(num);
+                console.log(`New sticker: #${num}, total collection: ${this.userCollection.length}`);
+            } else {
+                this.duplicates[num] = (this.duplicates[num] || 0) + 1;
+                console.log(`Duplicate found: #${num}, total: ${this.duplicates[num]}`);
+            }
+
             const category = utils.getStickerCategory(num).toLowerCase().replace(/ /g, '-');
             card.dataset.category = category;
+
+            card.innerHTML = `
+            <div class="sticker-front">
+                <div class="card-number">#${num}</div>
+                <div class="card-category">${utils.getStickerCategory(num)}</div>
+            </div>    
+            <div class="sticker-back">
+                <div id="img-container-${num}"></div>
+                <div class="card-number">#${num}</div>
+                ${isNew ? '<div class="new-label">NEW!</div>' : ''}
+            </div>
+        `;
 
             const cardBack = card.querySelector('.sticker-back');
             utils.setupImageRotation(img, num, cardBack);
 
             const imgContainer = card.querySelector(`#img-container-${num}`);
             imgContainer.appendChild(img);
-
 
             card.addEventListener('click', () => {
                 if (!card.classList.contains('flipped')) {
@@ -288,15 +314,6 @@ window.game = {
             });
 
             this.stickerArea.appendChild(card);
-
-            // Add to collection or duplicates
-            if (this.userCollection.includes(num)) {
-                this.duplicates[num] = (this.duplicates[num] || 0) + 1;
-                console.log(`Duplicate found: #${num}, total: ${this.duplicates[num]}`);
-            } else {
-                this.userCollection.push(num);
-                console.log(`New sticker: #${num}, total collection: ${this.userCollection.length}`);
-            }
         });
 
         // Animate cards spreading
@@ -476,6 +493,14 @@ window.game = {
 
         this.updateLabels();
         this.refreshDuplicates();
+
+        // Update the open pack button state after getting coins
+        if (this.coins >= 5 && !this.packInProgress) {
+            this.openPackBtn.disabled = false;
+            this.openPackBtn.classList.remove('disabled');
+            this.openPackBtn.textContent = "🎁 OPEN PACK (5 Coins)";
+        }
+
         const saved = await this.saveGame();
         if (saved) {
             utils.vibrate(50);
