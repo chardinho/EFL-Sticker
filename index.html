@@ -1331,6 +1331,8 @@
     // Create or join trade room
     await joinTradeRoom(code);
   }
+
+
   // Join trade room using Supabase realtime
   async function joinTradeRoom(code) {
     const { data: { user } } = await supabaseClient.auth.getUser();
@@ -1346,7 +1348,11 @@
     }
 
     // Subscribe to trade room updates FIRST
-    tradeChannel = supabaseClient.channel(`trade-room-${code}`)
+    tradeChannel = supabaseClient.channel(`trade-room-${code}-${Date.now()}`, {
+      config: {
+        broadcast: { self: true }
+      }
+    })
             .on(
                     'postgres_changes',
                     {
@@ -1386,7 +1392,7 @@
                       if (room.status === 'trading') {
                         console.log('Trade status: trading. Player1 trade:', room.player1_trade, 'Player2 trade:', room.player2_trade);
                         // Check if both players have submitted trades
-                        if (room.player1_trade && room.player2_trade) {
+                        if (room.player1_trade && room.player2_trade && room.player1_trade.length > 0 && room.player2_trade.length > 0) {
                           console.log('Both players submitted trades, completing...');
                           // Both players ready - complete the trade
                           await supabaseClient
@@ -1417,13 +1423,21 @@
               console.log('Channel subscription status:', status);
 
               if (status === 'SUBSCRIBED') {
+                // Clean up old rooms first (older than 5 minutes)
+                const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+                await supabaseClient
+                        .from('trade_rooms')
+                        .delete()
+                        .eq('code', code)
+                        .lt('created_at', fiveMinutesAgo);
+
                 // Now try to join or create room after subscription is ready
                 console.log('Checking for existing room with code:', code);
                 const { data: existingRoom, error: checkError } = await supabaseClient
                         .from('trade_rooms')
                         .select('*')
                         .eq('code', code)
-                        .in('status', ['waiting', 'matched'])
+                        .eq('status', 'waiting')
                         .maybeSingle();
 
                 console.log('Existing room check result:', existingRoom, 'Error:', checkError);
@@ -1436,7 +1450,7 @@
                 if (existingRoom && existingRoom.player1_id !== user.id) {
                   console.log('Joining existing room created by:', existingRoom.player1_name);
                   // Join existing room
-                  const { error: updateError } = await supabaseClient
+                  const { data: updatedRoom, error: updateError } = await supabaseClient
                           .from('trade_rooms')
                           .update({
                             player2_id: user.id,
@@ -1445,14 +1459,16 @@
                             updated_at: new Date().toISOString()
                           })
                           .eq('id', existingRoom.id)
-                          .eq('status', 'waiting');
+                          .eq('status', 'waiting')
+                          .select()
+                          .single();
 
                   if (updateError) {
                     console.error('Error joining room:', updateError);
                     return;
                   }
 
-                  console.log('Successfully joined room');
+                  console.log('Successfully joined room, updated data:', updatedRoom);
 
                   tradeMatch = {
                     roomId: existingRoom.id,
@@ -1474,6 +1490,8 @@
                             player1_id: user.id,
                             player1_name: username,
                             status: 'waiting',
+                            player1_trade: [],
+                            player2_trade: [],
                             created_at: new Date().toISOString(),
                             updated_at: new Date().toISOString()
                           })
@@ -1495,6 +1513,7 @@
               }
             });
   }
+  
   // Leave trade room
   async function leaveTradeRoom() {
     if (currentTradeCode && tradeChannel) {
