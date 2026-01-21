@@ -473,6 +473,7 @@
 <div id="album">
   <div class="close-btn" onclick="document.getElementById('album').style.display='none'">✖</div>
   <h2>Sticker Album</h2>
+  <div id="album-count">Collected 0 / 700 stickers</div>
   <div class="album-grid" id="album-grid"></div>
 </div>
 
@@ -949,13 +950,13 @@ async function openPack() {
   openPackBtn.classList.add('disabled');   // <-- RED
   flippedCount = 0;
   openPackBtn.textContent = "🔒 Flip all cards first";
-
+  
   updateLabels()
   coins -= 5;
   packsOpened++;
 
   updateLabels()
-  
+
   vibrate(50);
 
   stickerArea.innerHTML = '';
@@ -1072,16 +1073,21 @@ async function openPack() {
 // Album functions
 function refreshAlbum() {
   const grid = document.getElementById('album-grid');
+  const countLabel = document.getElementById('album-count');
   grid.innerHTML = '';
+
+  const collectedCount = userCollection.length;
+  countLabel.textContent = `Collected ${collectedCount} / ${STICKERS_TOTAL} stickers`;
+
   for (let i = 1; i <= STICKERS_TOTAL; i++) {
     const slot = document.createElement('div');
     slot.className = 'album-slot';
-    
+
     if (userCollection.includes(i)) {
       const img = document.createElement('img');
       img.src = `images/${i}.png`;
       img.alt = `Sticker #${i}`;
-      
+
       img.onload = function() {
         if (this.naturalWidth > this.naturalHeight) {
           this.classList.add('landscape');
@@ -1092,16 +1098,17 @@ function refreshAlbum() {
         const parent = this.parentElement;
         parent.innerHTML = `<div style='font-size:24px;color:#333'>#${i}</div>`;
       };
-      
+
       slot.innerHTML = `<div class="slot-number">#${i}</div>`;
       slot.insertBefore(img, slot.firstChild);
     } else {
       slot.innerHTML = '?';
     }
-    
+
     grid.appendChild(slot);
   }
 }
+
 
 // Duplicates functions
 function refreshDuplicates() {
