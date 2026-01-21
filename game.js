@@ -1,4 +1,4 @@
-// Game logic module
+// Game logic module - Updated with better mobile layout
 window.game = {
     // Game state
     STICKERS_TOTAL: 700,
@@ -288,36 +288,22 @@ window.game = {
             }
         });
 
-        // Animate cards spreading
+        // Animate cards spreading with better mobile layout
         setTimeout(() => {
             const cards = document.querySelectorAll('.sticker-card');
-            const areaWidth = this.stickerArea.offsetWidth;
-            const areaHeight = this.stickerArea.offsetHeight;
+            const areaWidth = this.stickerArea.clientWidth;
+            const areaHeight = this.stickerArea.clientHeight;
             
-            const isMobile = areaWidth < 600;
-            const cardsPerRow = isMobile ? Math.min(3, cards.length) : 5;
+            // Calculate layout based on screen size
+            const isMobile = window.innerWidth <= 768;
             
-            cards.forEach((card, i) => {
-                card.classList.remove('stacked');
-                card.classList.add('spread');
-                
-                const row = Math.floor(i / cardsPerRow);
-                const col = i % cardsPerRow;
-                
-                const cardWidth = 160;
-                const cardHeight = 240;
-                const spacing = isMobile ? 10 : 20;
-                
-                const totalWidth = cardsPerRow * cardWidth + (cardsPerRow - 1) * spacing;
-                const startX = (areaWidth - totalWidth) / 2;
-                const startY = (areaHeight - cardHeight) / 2 - row * (cardHeight / 2);
-                
-                const finalX = startX + col * (cardWidth + spacing);
-                const finalY = Math.max(10, startY + row * (cardHeight + spacing));
-                
-                card.style.left = `${finalX}px`;
-                card.style.top = `${finalY}px`;
-            });
+            if (isMobile) {
+                // Mobile: 2 rows (3 cards top, 2 cards bottom)
+                this.layoutCardsMobile(cards, areaWidth, areaHeight);
+            } else {
+                // Desktop: Single row of 5 cards
+                this.layoutCardsDesktop(cards, areaWidth, areaHeight);
+            }
         }, 300);
         
         // Save after opening pack
@@ -325,6 +311,82 @@ window.game = {
         if (!saved) {
             console.error("Failed to save after opening pack!");
         }
+    },
+
+    // Layout for mobile (2 rows)
+    layoutCardsMobile: function(cards, areaWidth, areaHeight) {
+        const cardWidth = 160;
+        const cardHeight = 240;
+        
+        // Mobile: 3 cards top row, 2 cards bottom row (centered)
+        const topRowCards = [cards[0], cards[1], cards[2]];
+        const bottomRowCards = [cards[3], cards[4]];
+        
+        // Calculate spacing for top row (3 cards)
+        const topRowSpacing = 15;
+        const topRowTotalWidth = 3 * cardWidth + 2 * topRowSpacing;
+        const topRowStartX = Math.max(10, (areaWidth - topRowTotalWidth) / 2);
+        const topRowY = Math.max(10, (areaHeight - 2 * cardHeight - 40) / 2);
+        
+        // Position top row cards
+        topRowCards.forEach((card, i) => {
+            card.classList.remove('stacked');
+            card.classList.add('spread');
+            
+            const x = topRowStartX + i * (cardWidth + topRowSpacing);
+            const y = topRowY;
+            
+            card.style.left = `${x}px`;
+            card.style.top = `${y}px`;
+            card.style.zIndex = 5 - i; // Slight z-index for visual depth
+        });
+        
+        // Calculate spacing for bottom row (2 cards)
+        const bottomRowSpacing = 40;
+        const bottomRowTotalWidth = 2 * cardWidth + bottomRowSpacing;
+        const bottomRowStartX = Math.max(10, (areaWidth - bottomRowTotalWidth) / 2);
+        const bottomRowY = topRowY + cardHeight + 40;
+        
+        // Position bottom row cards
+        bottomRowCards.forEach((card, i) => {
+            card.classList.remove('stacked');
+            card.classList.add('spread');
+            
+            const x = bottomRowStartX + i * (cardWidth + bottomRowSpacing);
+            const y = bottomRowY;
+            
+            card.style.left = `${x}px`;
+            card.style.top = `${y}px`;
+            card.style.zIndex = 4 - i; // Slight z-index for visual depth
+        });
+        
+        // Make sure sticker area has enough padding
+        this.stickerArea.style.padding = "20px 10px";
+        this.stickerArea.style.overflow = "auto"; // Allow scrolling if needed
+    },
+
+    // Layout for desktop (single row)
+    layoutCardsDesktop: function(cards, areaWidth, areaHeight) {
+        const cardWidth = 160;
+        const cardHeight = 240;
+        const spacing = 20;
+        const totalCards = cards.length;
+        
+        const totalWidth = totalCards * cardWidth + (totalCards - 1) * spacing;
+        const startX = Math.max(10, (areaWidth - totalWidth) / 2);
+        const startY = Math.max(10, (areaHeight - cardHeight) / 2);
+        
+        cards.forEach((card, i) => {
+            card.classList.remove('stacked');
+            card.classList.add('spread');
+            
+            const x = startX + i * (cardWidth + spacing);
+            const y = startY;
+            
+            card.style.left = `${x}px`;
+            card.style.top = `${y}px`;
+            card.style.zIndex = 5 - i; // Slight z-index for visual depth
+        });
     },
 
     // Album functions
