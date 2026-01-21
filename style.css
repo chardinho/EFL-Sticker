@@ -668,6 +668,141 @@ h2 {
 }
 /* style.css - Add these styles at the end of the file */
 
+
+#sticker-display-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    overflow-y: auto; /* Allow scrolling on mobile */
+}
+
+#sticker-display-modal .modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 400px;
+    width: 90%;
+    max-height: 80vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border: 3px solid #333;
+    overflow: hidden; /* Prevent content overflow */
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 600px) {
+    #sticker-display-modal .modal-content {
+        padding: 15px;
+        width: 95%;
+        max-height: 85vh;
+    }
+
+    #sticker-display-img-container {
+        height: 250px;
+        margin: 15px 0;
+    }
+
+    #sticker-display-img-container img.landscape {
+        max-height: 200px;
+        max-width: 250px;
+    }
+}
+
+/* Category Background Colors - Ensure they work on mobile */
+#sticker-display-modal .modal-content.category-magic-moments {
+    background: linear-gradient(135deg, #f3e5f5, #e1bee7) !important;
+    border: 3px solid #7b1fa2 !important;
+}
+
+#sticker-display-modal .modal-content.category-elite {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2) !important;
+    border: 3px solid #ef6c00 !important;
+}
+
+#sticker-display-modal .modal-content.category-championship {
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9) !important;
+    border: 3px solid #2e7d32 !important;
+}
+
+#sticker-display-modal .modal-content.category-ones-to-watch {
+    background: linear-gradient(135deg, #fce4ec, #f8bbd9) !important;
+    border: 3px solid #c2185b !important;
+}
+
+#sticker-display-modal .modal-content.category-league-one {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb) !important;
+    border: 3px solid #1565c0 !important;
+}
+
+#sticker-display-modal .modal-content.category-raised-in-the-efl {
+    background: linear-gradient(135deg, #f5f5f5, #eeeeee) !important;
+    border: 3px solid #616161 !important;
+}
+
+/* Number display - Mobile adjustments */
+@media (max-width: 600px) {
+    #sticker-display-number {
+        font-size: 20px !important;
+        padding: 8px 16px !important;
+    }
+}
+
+/* Make sure image container has transparent background */
+#sticker-display-img-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+    border-radius: 8px;
+    background: transparent !important;
+    padding: 0 !important;
+}
+
+/* Close button positioning for mobile */
+#sticker-display-modal .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #ff6b6b;
+    color: white;
+    border: 2px solid #333;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    z-index: 1001;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Mobile touch-friendly adjustments */
+@media (max-width: 600px) {
+    #sticker-display-modal .close-btn {
+        top: 5px;
+        right: 5px;
+        font-size: 20px;
+        padding: 6px 12px;
+    }
+
+    /* Prevent text selection on mobile */
+    .modal-content {
+        -webkit-user-select: none;
+        user-select: none;
+    }
+}
+
 /* Modal Category Background Colors */
 #sticker-display-modal .modal-content.category-magic-moments {
     background: linear-gradient(135deg, #f3e5f5, #e1bee7);

@@ -515,21 +515,22 @@ window.game = {
         document.getElementById('sell-duplicates').addEventListener('click', () => this.sellDuplicates());
     },
 
-    // Display sticker modal
     displayStickerModal: function(stickerNum) {
         const modal = document.getElementById('sticker-display-modal');
+        const modalContent = modal.querySelector('.modal-content');
         const imgContainer = document.getElementById('sticker-display-img-container');
         const numberDisplay = document.getElementById('sticker-display-number');
-        const modalContent = modal.querySelector('.modal-content');
 
-        if (!modal || !imgContainer || !numberDisplay) return;
+        if (!modal || !modalContent || !imgContainer || !numberDisplay) return;
 
-        // Clear previous content and classes
+        // Clear previous content
         imgContainer.innerHTML = '';
         numberDisplay.textContent = `#${stickerNum}`;
 
-        // Remove any existing category classes
-        modalContent.className = 'modal-content';
+        // Remove all existing category classes
+        const allClasses = modalContent.className.split(' ');
+        const filteredClasses = allClasses.filter(cls => !cls.startsWith('category-'));
+        modalContent.className = filteredClasses.join(' ') + ' modal-content';
 
         // Get the category and add it as a class
         const category = utils.getStickerCategory(stickerNum).toLowerCase().replace(/ /g, '-');
@@ -539,6 +540,8 @@ window.game = {
         const img = document.createElement('img');
         img.src = `images/${stickerNum}.png`;
         img.alt = `Sticker #${stickerNum}`;
+
+        // Handle image load/error
         img.onload = function() {
             if (this.naturalWidth > this.naturalHeight) {
                 this.classList.add('landscape');
